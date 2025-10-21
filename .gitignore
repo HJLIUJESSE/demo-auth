@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Node.js / Vite (前端專案)
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env*
+*.local
+
+# (建議也補上這個，忽略 mvn wrapper 執行檔)
+mvnw
+mvnw.cmd
