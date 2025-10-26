@@ -4,11 +4,42 @@ This repository delivers a Spring Boot 3.5 backend and a React 19 + Vite fronten
 
 ## Prerequisites
 - Java 17 (Temurin, Corretto, or another distribution with TLS support)
-- Maven Wrapper (`mvnw` is included; a global Maven install is optional)
+- Maven Wrapper (`mvnw` is tracked with the repo; a global Maven install is optional)
 - Node.js 20 LTS and npm (nvm is recommended for version management)
 - MySQL 8.0 or later
 - Git 2.40 or later
 - Optional: Docker + Docker Compose if you prefer a containerized MySQL instance
+
+## Install Required Tools
+### Java 17
+- **macOS:** `brew install --cask temurin17`
+- **Windows (PowerShell admin):** `winget install EclipseAdoptium.Temurin.17.JDK`
+- **Ubuntu/Debian:** `sudo apt update && sudo apt install openjdk-17-jdk`
+Verify with `java -version`.
+
+### Maven Wrapper & Spring Boot
+The wrapper script already ships with the repo. After cloning:
+```bash
+chmod +x mvnw
+./mvnw -v
+```
+If `chmod` is unavailable on Windows, run `git config core.fileMode false` and execute `mvnw.cmd`. Spring Boot tooling is resolved automatically by Maven; no extra installation is required.
+
+### Node.js 20 + npm
+- Install nvm (https://github.com/nvm-sh/nvm) and run `nvm install 20 && nvm use 20`, **or**
+- **macOS:** `brew install node@20`
+- **Windows:** `winget install OpenJS.NodeJS.LTS` or `choco install nodejs-lts`
+- **Ubuntu/Debian:** Use NodeSource: `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -` then `sudo apt install nodejs`
+Confirm with `node -v` and `npm -v`.
+
+### MySQL 8.0
+- **macOS:** `brew install mysql && brew services start mysql`
+- **Windows:** `winget install Oracle.MySQL` or `choco install mysql`
+- **Ubuntu/Debian:** `sudo apt update && sudo apt install mysql-server`
+Secure the install with `mysql_secure_installation`. Alternatively, run the Docker command shown later in this guide.
+
+### Git
+Download from https://git-scm.com/downloads, or install via package manager (macOS: `brew install git`, Ubuntu: `sudo apt install git`). Verify with `git --version`.
 
 ## Clone the Repository
 ```bash
@@ -71,6 +102,13 @@ The dev server listens on `http://localhost:5173` and proxies API traffic to the
      -d '{"username":"demo","password":"demo"}'
    ```
 3. Never commit secrets or certificates. Keep JWT keys and database credentials in environment variables or a secrets manager.
+
+## Troubleshooting Common Setup Issues
+- **`mvnw` permission denied (macOS/Linux):** run `chmod +x mvnw` and retry.
+- **MySQL refuses connection:** ensure MySQL is listening on `localhost:3306` and the firewall allows access. Run `mysql -u demo_user -p -h 127.0.0.1 demo_auth` to confirm.
+- **Different Node version detected:** run `nvm install 20` or update your Node install so `node -v` reports 20.x; delete `frontend/node_modules` and rerun `npm install` if necessary.
+- **Port already in use:** change the backend port in `application.yml` (`server.port`) or the frontend port via `npm run dev -- --port 5174`.
+- **Database schema drift:** after switching branches, drop and recreate the schema or run a migration tool to realign tables.
 
 ## Deployment Tips
 - Prefer managed MySQL services (AWS RDS, Azure Database for MySQL, etc.) and restrict network access to trusted apps.
