@@ -38,6 +38,14 @@ build/
 /frontend/.env*
 *.local
 
+# Secrets (do not commit)
+key.json
+
+# Cloud SQL proxy binary and crash logs (do not commit)
+cloud-sql-proxy.exe
+hs_err_pid*.log
+replay_pid*.log
+
 # (建議也補上這個，忽略 mvn wrapper 執行檔)
 mvnw
 mvnw.cmd

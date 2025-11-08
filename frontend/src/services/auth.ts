@@ -1,7 +1,7 @@
 const API_URL = '/api';
 
 export const register = (username, email, password) => {
-  return fetch('http://localhost:8080/api/auth/register', {
+  return fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -15,7 +15,7 @@ export const register = (username, email, password) => {
 };
 
 export const login = (username, password) => {
-  return fetch('http://localhost:8080/api/auth/login', {
+  return fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export const getMe = () => {
     if (!token) {
         return Promise.reject("No token found");
     }
-    return fetch('http://localhost:8080/api/me', {
+    return fetch(`${API_URL}/me`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }

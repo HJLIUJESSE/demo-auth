@@ -5,16 +5,25 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-@Entity @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
+@Entity
+@Table(
+    name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
+        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+    }
+)
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @NotBlank @Size(min = 3, max = 50)
+  @Column(nullable = false)
   private String username;
 
   @NotBlank @Email
+  @Column(nullable = false)
   private String email;
 
   @NotBlank

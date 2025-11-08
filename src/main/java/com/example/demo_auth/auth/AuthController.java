@@ -2,8 +2,8 @@
 package com.example.demo_auth.auth;
 
 import com.example.demo_auth.security.JwtService;
-import com.example.demo_auth.user.User;
 import com.example.demo_auth.user.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +25,13 @@ public class AuthController {
   private final UserService userService;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody RegisterRequest req){
+  public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req){
     var u = userService.register(req.getUsername(), req.getEmail(), req.getPassword());
     return ResponseEntity.ok("registered: " + u.getUsername());
   }
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest req){
+  public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
     try {
       Authentication auth = authManager.authenticate(
           new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
