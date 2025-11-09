@@ -23,3 +23,47 @@ History so far favors short descriptive subjects; continue with imperative summa
 
 ## Security & Configuration Tips
 Do not commit credentials; keep secrets in environment variables or `.env.local` (already `.gitignore`d). Document new required properties inside `application.yml` comments. For JWT or database updates, rotate keys locally and describe the rollout plan in the PR.
+
+## Prerequisites
+- Java 17 (set `JAVA_HOME` accordingly)
+- Maven Wrapper (`mvnw`/`mvnw.cmd` in repo)
+- Node.js 18+ and npm 9+
+
+## Dev Ports
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:5173`
+
+## Windows Command Variants
+- `mvnw.cmd spring-boot:run`
+- `mvnw.cmd clean package`
+- `mvnw.cmd test`
+
+## Local Env & Configuration
+- Backend configuration lives in `src/main/resources/application.yml` and can be overridden via environment variables.
+  - Common properties (example names; document specifics where introduced):
+    - `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`
+    - `jwt.secret`, `jwt.expiration`
+  - Equivalent env vars: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION`.
+- Frontend env variables go in `frontend/.env.local` (gitignored):
+  - `VITE_API_BASE_URL` (e.g., `http://localhost:8080` or `/api` when using a dev proxy)
+
+## Dev Proxy & CORS
+- Prefer a Vite dev proxy to avoid CORS during development. In `frontend/vite.config.ts`, target the backend and rewrite to `/api`:
+  
+  ```ts
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  }
+  ```
+- Point frontend API calls to `"/api"` or set `VITE_API_BASE_URL=/api` locally.
+
+## Troubleshooting
+- Maven wrapper permissions on Unix: `chmod +x mvnw`.
+- Port conflicts: change backend port via `server.port` in `application.yml` or `SERVER_PORT` env var; adjust Vite proxy accordingly.
+- Dependency mismatches: ensure Node and Java versions match the prerequisites above.

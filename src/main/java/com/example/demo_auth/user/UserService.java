@@ -15,15 +15,18 @@ public class UserService {
 
   @Transactional
   public User register(String username, String email, String rawPassword){
-    if (repo.existsByUsername(username)) {
+    String normalizedUsername = username == null ? null : username.trim();
+    String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+
+    if (repo.existsByUsername(normalizedUsername)) {
       throw new ResourceConflictException("Username taken");
     }
-    if (repo.existsByEmail(email)) {
+    if (repo.existsByEmailIgnoreCase(normalizedEmail)) {
       throw new ResourceConflictException("Email used");
     }
     var user = User.builder()
-        .username(username)
-        .email(email)
+        .username(normalizedUsername)
+        .email(normalizedEmail)
         .password(encoder.encode(rawPassword))
         .roles("ROLE_USER")
         .enabled(true)

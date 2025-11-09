@@ -8,6 +8,21 @@
 - 機密不入庫：DB 密碼與 JWT 秘鑰以環境變數提供
 - CORS 可用環境變數設定允許的前端網域
 
+## 最近更新（2025-11-10）
+- 新增忘記密碼流程：
+  - `POST /api/auth/forgot-password`（產生一次性重設 token，dev 寄信記 log、prod 寄信）；
+  - `POST /api/auth/reset-password`（帶 token 與新密碼重設）。
+- 郵件寄送：
+  - Dev：`NoopMailer`（不寄信，log 顯示重設連結，支援 sandbox/白名單）
+  - Prod：`SmtpMailer`（支援 Gmail/SendGrid/SES 等 SMTP；品牌化 HTML 模板；關閉 click/open 追蹤）
+  - 新增 sandbox（`APP_MAIL_SANDBOX_ENABLED`）與白名單（`APP_MAIL_ALLOWLIST`）
+- 速率限制（忘記密碼）：IP 與 Email 雙重限制（預設 15 分鐘 5 次），超限一律 200 但不產生 token。
+- 個人頁 API 與前端：
+  - `GET/PUT /api/profile`（生日）與 `POST /api/profile/avatar`（頭像上傳）
+  - 靜態檔對外：`/uploads/**`
+  - 前端新增 `ForgotPassword`、`ResetPassword`、`Dashboard`（含個人頁）
+- 其他：新增 Actuator `/actuator/health`、`Dockerfile` 多階段建置。
+
 ## 必要環境變數
 - `CLOUD_SQL_INSTANCE`：Cloud SQL 連線名稱（格式：`<PROJECT>:<REGION>:<INSTANCE>`）
 - `DB_NAME`：資料庫名稱（預設 `zapp_demo_db`）
@@ -97,3 +112,105 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 - CORS 設定載入處：`src/main/java/com/example/demo_auth/WebConfig.java`
 - Cloud SQL Connector 依賴已加入於 `pom.xml`
 
+## SMTP/忘記密碼（prod）
+- 啟用方式：設定 `SPRING_PROFILES_ACTIVE=prod` 與 SMTP 參數（以下以 Gmail 為例）
+```
+APP_MAIL_FROM=your@gmail.com
+SPRING_MAIL_HOST=smtp.gmail.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=your@gmail.com
+SPRING_MAIL_PASSWORD=<Gmail 應用程式密碼>
+SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+```
+- dev 預設不寄信（只回 token 與記錄 log）；prod 預設寄信且不回 token。
+- 重設連結前綴：`APP_RESET_BASE_URL`（預設為 `http://localhost:5173/reset-password?token=`）。
+
+### 郵件 Sandbox 與白名單（上線規格）
+- 設定：
+  - `APP_MAIL_SANDBOX_ENABLED=true|false`：開啟後，非白名單收件人將被改寄到 `APP_MAIL_SANDBOX_RECIPIENT`
+  - `APP_MAIL_SANDBOX_RECIPIENT`：沙盒收件者（例如 `qa-inbox@example.com`）
+  - `APP_MAIL_ALLOWLIST`：以逗號分隔的允許清單，支援完整 email 或網域（如 `example.com,staff@company.com`）
+  - `APP_MAIL_FROM_NAME`：寄件顯示名稱（預設 `Demo App`）
+- 預設：`application-dev.yml` 啟用 sandbox；`application-prod.yml` 關閉 sandbox。
+
+### 速率限制（忘記密碼）
+- 參數：
+  - `APP_RATE_FP_MAX`（預設 5）：每視窗最大請求數（按 IP 與 Email 各計）
+  - `APP_RATE_FP_WINDOW`（預設 900 秒）：視窗秒數
+- 超限時 API 仍回 200，但不產生 token（不洩漏資訊）。
+
+## 前端（重設密碼與個人頁）
+- 新增頁面與功能：
+  - `ForgotPassword`、`ResetPassword`（可從登入頁點「Forgot password?」或直接開 `/reset-password?token=`）
+  - 登入後 `Dashboard`：三個頁籤（首頁、群聊、個人）；個人頁可編輯生日與上傳頭像（對應 `/api/profile` 與 `/api/profile/avatar`）。
+
+## 忘記密碼（功能與環境設定總表）
+- 端點
+  - `POST /api/auth/forgot-password`：輸入 email → 建立重設 token → dev 記錄重設連結、prod 寄信；回應一律 200。
+  - `POST /api/auth/reset-password`：輸入 token + newPassword → 成功 200。
+- 寄信設定（必要）
+  - `APP_MAIL_ENABLED`：true 開啟寄信；false 僅記 log（dev 預設）。
+  - `APP_MAIL_FROM`：寄件地址（Single Sender 用經驗證的單一 Email；正式用網域如 `no-reply@yourdomain.com`）。
+  - `APP_MAIL_FROM_NAME`：寄件顯示名稱（品牌名）。
+  - `SPRING_MAIL_HOST/PORT/USERNAME/PASSWORD`：SMTP 參數（SendGrid：host `smtp.sendgrid.net`、port `587`、username `apikey`、password 為 API Key）。
+  - `APP_RESET_BASE_URL`：重設連結前綴（dev：`http://localhost:5173/reset-password?token=`，prod 請改正式 HTTPS 網域）。
+- 寄信補充（可選）
+  - `APP_MAIL_REPLY_TO`：使用者回覆信件的地址。
+  - `APP_MAIL_SUPPORT_URL`：信內的「客服/支援」連結。
+  - `APP_MAIL_SANDBOX_ENABLED`：開啟 sandbox 時，非白名單收件者改寄到 sandbox 收件箱。
+  - `APP_MAIL_SANDBOX_RECIPIENT`：sandbox 收件箱地址（例如 qa-inbox@company.com）。
+  - `APP_MAIL_ALLOWLIST`：白名單（逗號分隔；支援完整 email 或網域，如 `company.com,staff@partner.com`）。
+  - 交易信已預設關閉 click/open 追蹤並加上分類 `password_reset`。
+- 速率限制（預設值，環境變數可覆寫）
+  - `APP_RATE_FP_MAX`：每視窗最大次數（預設 5）
+  - `APP_RATE_FP_WINDOW`：視窗秒數（預設 900）
+- Profile 切換
+  - `SPRING_PROFILES_ACTIVE=dev|prod`；dev 會使用 `NoopMailer`（不寄信，log 顯示重設連結）；prod 啟用 SMTP 寄信。
+
+## 開發測試指南（SendGrid Single Sender 快速上手）
+1) SendGrid 後台建立 Single Sender（From Email = 你的收信信箱）並完成驗證；建立 API Key。
+2) PowerShell 設定（同視窗）：
+```
+$env:APP_MAIL_ENABLED='true'
+$env:APP_MAIL_SANDBOX_ENABLED='false'
+$env:APP_MAIL_FROM='<你的Single Sender Email>'
+$env:APP_MAIL_FROM_NAME='Demo App'
+$env:SPRING_MAIL_HOST='smtp.sendgrid.net'
+$env:SPRING_MAIL_PORT='587'
+$env:SPRING_MAIL_USERNAME='apikey'
+$env:SPRING_MAIL_PASSWORD='<你的SendGrid API Key>'
+$env:SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH='true'
+$env:SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE='true'
+$env:APP_RESET_BASE_URL='http://localhost:5173/reset-password?token='
+$env:JWT_SECRET='<64+隨機字元>'
+# H2 檔案模式（重啟不清空）
+$env:SPRING_DATASOURCE_URL='jdbc:h2:file:./localdb/demo;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false'
+$env:SPRING_DATASOURCE_DRIVER_CLASS_NAME='org.h2.Driver'
+$env:SPRING_DATASOURCE_USERNAME='sa'
+$env:SPRING_DATASOURCE_PASSWORD=''
+```
+3) 啟動後端 `.\mvnw.cmd spring-boot:run`，前端 `npm run dev`。
+4) 先註冊該 Email → 回登入頁按 Forgot password → 到收件匣收信 → 點連結到 `/reset-password?token=...`。
+
+## 正式上線建議（提升投遞率）
+- 在 SendGrid 完成 Domain Authentication（SPF/DKIM/Link Branding/Return‑Path）並改用 `no-reply@你的網域` 作為 From。
+- DNS 加上 DMARC（先 `p=none` 觀察，再逐步 `quarantine/reject`）。
+- `APP_RESET_BASE_URL` 改指向正式 HTTPS 網域，避免 `localhost` 連結降評。
+- 維持低退信/投訴率、名單衛生、並在 Gmail Postmaster Tools 監控網域信譽。
+
+## 路線圖（Roadmap）
+- 郵件/寄信
+  - SendGrid Web API 整合（取代 SMTP）、模板化與多語系主旨。
+  - 完成正式網域認證與 DMARC 導入；依環境自動關閉/開啟追蹤。
+- 後端
+  - Flyway 導入與 `ddl-auto=validate`（prod）。
+  - 密碼重設成功後註銷既有登入態/refresh token。
+  - 擴充登入速率限制/登入失敗鎖定、審計日誌與結構化 JSON log/Request‑ID。
+- 前端
+  - 忘記密碼/重設頁品牌化樣式與可用性強化；簡易路由與錯誤提示。
+  - 個人頁更多欄位（暱稱、性別、地區）與驗證、檔案大小/格式限制。
+- 活動功能
+  - 報名：候補機制與名額釋放、匯出、欄位遮罩。
+  - 群聊：WebSocket/SSE、訊息稽核與濫用控制。
+  - 地點：地理編碼快取與第三方地圖供應商切換。

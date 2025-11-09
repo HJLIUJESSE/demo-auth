@@ -28,8 +28,35 @@ app:
     instance: ${CLOUD_SQL_INSTANCE:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # 以下為一般應用設定預設值（可被 profile 覆蓋）
+  password-reset:
+    return-token-in-response: false
+  mail:
+    enabled: false
+    from: ${APP_MAIL_FROM:noreply@localhost}
+    fromName: ${APP_MAIL_FROM_NAME:Demo App}
+    sandbox:
+      enabled: ${APP_MAIL_SANDBOX_ENABLED:false}
+      recipient: ${APP_MAIL_SANDBOX_RECIPIENT:}
+    allowlist: ${APP_MAIL_ALLOWLIST:}
+    reply-to: ${APP_MAIL_REPLY_TO:}
+    support-url: ${APP_MAIL_SUPPORT_URL:https://example.com/support}
+  frontend:
+    reset-base-url: ${APP_RESET_BASE_URL:http://localhost:5173/reset-password?token=}
+
+  rate-limit:
+    forgot-password:
+      max-per-window: ${APP_RATE_FP_MAX:5}
+      window-seconds: ${APP_RATE_FP_WINDOW:900}
 
 jwt:
   # 不在檔案中寫死，請用環境變數提供；未設定會導致啟動失敗（JWT 金鑰太短）
   secret: ${JWT_SECRET:}
   expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+
+# Actuator 最小化設定：僅暴露 health，預設 base-path /actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

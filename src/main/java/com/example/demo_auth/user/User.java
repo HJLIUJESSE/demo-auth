@@ -33,4 +33,10 @@ public class User {
   
   @Builder.Default
   private boolean enabled = true;
+
+  // 使用者基本資料
+  private java.time.LocalDate birthDate;
+
+  // 頭像URL（例如 /uploads/avatars/xxx.png）
+  private String avatarUrl;
 }

@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+app:
+  password-reset:
+    return-token-in-response: false
+  mail:
+    enabled: false
+    fromName: "Demo App (DEV)"
+    sandbox:
+      enabled: true
+      recipient: "dev-inbox@example.com"
+    allowlist: "example.com"
+  frontend:
+    reset-base-url: "http://localhost:5173/reset-password?token="

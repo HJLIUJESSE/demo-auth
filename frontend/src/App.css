@@ -56,8 +56,7 @@ body {
 }
 
 button {
-  width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 4px;
   background-color: #007bff;
@@ -71,6 +70,16 @@ button {
 button:hover {
   background-color: #0056b3;
 }
+
+/* 表單主要按鈕滿寬，避免其他地方的按鈕被撐滿 */
+.auth-container .form-group button[type="submit"],
+.auth-container .form-group button:not([type]) {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+/* 儀表列的按鈕使用自適應寬度 */
+.dashboard-nav button { width: auto; }
 
 .message {
   margin-top: 1.5rem;
@@ -104,4 +113,41 @@ p a {
 
 p a:hover {
   text-decoration: underline;
+}
+
+/* 修正頂部導航和容器間距，避免重疊 */
+.top-spacing { margin-top: 1rem; }
+
+/* Secondary button style */
+.btn-secondary {
+  background-color: #6c757d;
+}
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Personal page layout */
+.profile-container {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.profile-avatar img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 60px;
+  border: 1px solid #ddd;
+  display: block;
+  margin-bottom: 8px;
+}
+.profile-fields input[type="date"],
+.profile-fields input[type="text"],
+.profile-fields input[type="email"] {
+  max-width: 240px;
+}
+
+@media (max-width: 640px) {
+  .profile-container { grid-template-columns: 1fr; }
 }
